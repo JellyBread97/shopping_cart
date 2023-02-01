@@ -7,13 +7,7 @@ const ProductRouter = express.Router();
 
 ProductRouter.get("/", async (req, res, next) => {
   try {
-    const query = {};
-    if (req.query.name) {
-      query.name = {
-        [Op.like]: `%${req.query.name}%`,
-      };
-    }
-    const products = await ProductModel.findAll({ where: query });
+    const products = await ProductModel.findAll();
     res.send(products);
   } catch (error) {
     next(error);
@@ -66,6 +60,20 @@ ProductRouter.delete("/:id", async (req, res, next) => {
     } else {
       next(createHttpError(404, "Product not found"));
     }
+  } catch (error) {
+    next(error);
+  }
+});
+
+ProductRouter.get("/name", async (req, res, next) => {
+  try {
+    const query = {};
+    if (req.query.name) query.name = { [Op.iLike]: `${req.query.name}%` };
+    const product = await ProductModel.findAll({
+      where: { ...query },
+      attributes: ["name"],
+    });
+    res.send(product);
   } catch (error) {
     next(error);
   }
