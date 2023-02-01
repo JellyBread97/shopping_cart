@@ -5,15 +5,6 @@ import ProductModel from "./model.js";
 
 const ProductRouter = express.Router();
 
-ProductRouter.get("/", async (req, res, next) => {
-  try {
-    const products = await ProductModel.findAll();
-    res.send(products);
-  } catch (error) {
-    next(error);
-  }
-});
-
 ProductRouter.get("/:id", async (req, res, next) => {
   try {
     const product = await ProductModel.findByPk(req.params.id);
@@ -65,16 +56,24 @@ ProductRouter.delete("/:id", async (req, res, next) => {
   }
 });
 
-ProductRouter.get("/name", async (req, res, next) => {
+ProductRouter.get("/", async (req, res, next) => {
   try {
     const query = {};
     if (req.query.name) query.name = { [Op.iLike]: `${req.query.name}%` };
-    const product = await ProductModel.findAll({
+    if (req.query.category)
+      query.category = { [Op.iLike]: `${req.query.category}%` };
+    if (req.query.price) {
+      query.price = {
+        [Op.between]: [req.query.price.min, req.query.price.max],
+      };
+    }
+    const products = await ProductModel.findAll({
       where: { ...query },
-      attributes: ["name"],
+      attributes: ["id", "name", "category", "price"],
     });
-    res.send(product);
+    res.send(products);
   } catch (error) {
+    console.log(error);
     next(error);
   }
 });
